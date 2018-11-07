@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mybatis="http://mybatis.org/schema/mybatis-spring" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd   http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+  <!--引入mysql.properties的配置-->
+
+  <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+        init-method="init" destroy-method="close">
+    <property name="driverClassName" value="${mysql.driver}" />
+    <property name="url" value="${mysql.url}" />
+    <property name="username" value="${mysql.user}" />
+    <property name="password" value="${mysql.password}" />
+    <!-- 配置初始化大小、最小、最大 -->
+    <property name="initialSize" value="${mysql.initialSize}" />
+    <property name="minIdle" value="${mysql.minIdle}" />
+    <property name="maxActive" value="${mysql.maxActive}" />
+    <!-- 配置获取连接等待超时的时间 -->
+    <property name="maxWait" value="${mysql.maxWait}" />
+    <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+    <property name="timeBetweenEvictionRunsMillis" value="${mysql.timeBetweenEvictionRunsMillis}" />
+    <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+    <property name="minEvictableIdleTimeMillis" value="${mysql.minEvictableIdleTimeMillis}" />
+    <property name="testWhileIdle" value="${mysql.testWhileIdle}" />
+    <!-- 这里建议配置为TRUE，防止取到的连接不可用 -->
+    <property name="testOnBorrow" value="${mysql.testOnBorrow}" />
+    <property name="testOnReturn" value="${mysql.testOnReturn}" />
+    <!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+    <property name="poolPreparedStatements" value="${mysql.poolPreparedStatements}" />
+    <property name="maxPoolPreparedStatementPerConnectionSize" value="${mysql.maxPoolPreparedStatementPerConnectionSize}" />
+    <!-- 这里配置提交方式，默认就是TRUE，可以不用配置 -->
+    <property name="defaultAutoCommit" value="${mysql.defaultAutoCommit}" />
+    <!-- 验证连接有效与否的SQL，不同的数据配置不同 -->
+    <!--<property name="validationQuery" value="select 1 " />-->
+    <!--<property name="filters" value="stat" />-->
+    <!--<property name="proxyFilters">-->
+      <!--<list>-->
+        <!--<ref bean="logFilter" />-->
+      <!--</list>-->
+    <!--</property>-->
+  </bean>
+
+  <!--&lt;!&ndash;sqlSessionFactory配置&ndash;&gt;-->
+  <!--<bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">-->
+    <!--&lt;!&ndash;对应连接池c3p0(必须有)&ndash;&gt;-->
+    <!--<property name="dataSource" ref="dataSource"/>-->
+    <!--&lt;!&ndash;mybatis全局配置(可以没有)&ndash;&gt;-->
+    <!--<property name="configLocation" value="classpath:mybatis/configLocation.xml"/>-->
+    <!--&lt;!&ndash;映射配置文件地址(注解接口形式可以不要)&ndash;&gt;-->
+    <!--<property name="mapperLocations" value="classpath:com/lgren/mapper/*.xml"/>-->
+  <!--</bean>-->
+
+  <!--sqlSessionFactory配置-->
+  <bean id="sqlSessionFactoryBean" class="com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean">
+    <!--对应连接池c3p0(必须有)-->
+    <property name="dataSource" ref="dataSource"/>
+    <!--mybatis全局配置(可以没有)-->
+    <property name="configLocation" value="classpath:mybatis/configLocation.xml"/>
+    <!--<property name="typeAliasesPackage" value="com.baomidou.springmvc.model.*"/>-->
+    <!--&lt;!&ndash;映射配置文件地址(注解接口形式可以不要)&ndash;&gt;-->
+    <property name="mapperLocations" value="classpath:com/lgren/mapper/*.xml" />
+    <property name="plugins">
+      <array>
+        <!-- 分页插件配置 -->
+        <bean id="paginationInterceptor" class="com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor">
+          <property name="dialectType" value="mysql"/>
+        </bean>
+      </array>
+    </property>
+    <!--自动使用枚举-->
+    <!--<property name="typeEnumsPackage" value="com.lgren.entity.enums" />-->
+    <!--全局配置注入-->
+    <property name="globalConfig" ref="globalConfig" />
+  </bean>
+
+  <!--全局配置-->
+  <bean id="globalConfig" class="com.baomidou.mybatisplus.core.config.GlobalConfig">
+    <!--使用逻辑删除-->
+    <property name="sqlInjector">
+      <bean class="com.baomidou.mybatisplus.extension.injector.LogicSqlInjector"/>
+    </property>
+    <!--自动填充-->
+    <property name="metaObjectHandler">
+      <bean class="com.lgren.mapper.fill.MyMetaObjectHandler"/>
+    </property>
+  </bean>
+
+  <!--热加载dao层xml配置-->
+  <bean class="com.baomidou.mybatisplus.extension.spring.MybatisMapperRefresh">
+    <constructor-arg name="sqlSessionFactory" ref="sqlSessionFactoryBean"/>
+    <constructor-arg name="mapperLocations" value="classpath:com/lgren/mapper/*.xml"/>
+    <!--项目启动延迟加载时间-->
+    <constructor-arg name="delaySeconds" value="5"/>
+    <!--刷新时间间隔-->
+    <constructor-arg name="sleepSeconds" value="10"/>
+    <!--是否开启动态加载-->
+    <constructor-arg name="enabled" value="true"/>
+  </bean>
+
+
+  <!--mybatis接口自动扫描-->
+  <mybatis:scan base-package="com.lgren.mapper" />
+
+  <!--事务管理-->
+  <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="dataSource"/>
+  </bean>
+  <!-- 事务通知 -->
+  <tx:advice id="txAdvice" transaction-manager="transactionManager">
+    <tx:attributes>
+      <tx:method name="add*" propagation="REQUIRED" />
+      <tx:method name="save*" propagation="REQUIRED" />
+      <tx:method name="insert*" propagation="REQUIRED" />
+      <tx:method name="update*" propagation="REQUIRED" />
+      <tx:method name="delete*" propagation="REQUIRED" />
+      <tx:method name="remove*" propagation="REQUIRED" />
+      <tx:method name="*" propagation="SUPPORTS" />
+
+    </tx:attributes>
+  </tx:advice>
+
+  <!-- 切面配置 -->
+  <aop:config expose-proxy="true">
+    <!-- 拦截servcie 下面的所有包 -->
+    <aop:pointcut id="mycut" expression="execution(* com.lgren.*.*(..))" />
+    <aop:advisor advice-ref="txAdvice" pointcut-ref="mycut" />
+  </aop:config>
+  <tx:annotation-driven transaction-manager="transactionManager"/>
+</beans>

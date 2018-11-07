@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+  <!--组件扫描(只管Controller层)-->
+  <context:component-scan base-package="com.lgren" use-default-filters="false">
+    <!--只接管Controller层-->
+    <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    <context:include-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+  </context:component-scan>
+  <!--设置配置方案(如果不要这个加了下边的,Controller层不能正常工作)-->
+  <!-- 支持fastJson -->
+  <mvc:annotation-driven>
+    <mvc:message-converters  register-defaults="true">
+      <bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+        <property name="supportedMediaTypes" >
+          <list>
+            <value>application/json;charset=UTF-8</value>
+            <value>text/html;charset=UTF-8</value>
+          </list>
+        </property>
+        <property name="features">
+          <array>
+            <!--是否输出值为null的字段,默认为false-->
+            <value>WriteMapNullValue</value>
+            <!--字符类型字段如果为null,输出为"",而非null-->
+            <value>WriteNullStringAsEmpty</value>
+            <!--List字段如果为null,输出为[],而非null-->
+            <value>WriteNullListAsEmpty</value>
+            <!--全局修改日期格式,默认为false。JSON.DEFFAULT_DATE_FORMAT = "yyyy-MM-dd";-->
+            <value>WriteDateUseDateFormat</value>
+            <!--Enum输出name()或者original,默认为false-->
+            <value>WriteEnumUsingToString</value>
+          </array>
+        </property>
+        <!--<property name="fastJsonConfig" ref="fastJsonConfig"/>-->
+      </bean>
+    </mvc:message-converters>
+  </mvc:annotation-driven>
+  <!--使用默认的Servlet来响应静态文件(如果不要这个,css,js等文件不能读取)-->
+  <mvc:default-servlet-handler/>
+
+  <!-- freemarker的配置 -->
+  <bean id="freemarkerConfig" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+    <property name="templateLoaderPath" value="/WEB-INF/view/" />
+    <property name="defaultEncoding" value="utf8" />
+    <property name="freemarkerSettings">
+      <props>
+        <prop key="template_update_delay">10</prop>
+        <prop key="locale">zh_CN</prop>
+        <prop key="datetime_format">yyyy-MM-dd HH:mm:ss</prop>
+        <prop key="date_format">yyyy-MM-dd</prop>
+        <prop key="number_format">#.##</prop>
+      </props>
+    </property>
+  </bean>
+  <!--FTL视图解析-->
+  <bean id="viewResolverFtl" class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+    <property name="viewClass" value="org.springframework.web.servlet.view.freemarker.FreeMarkerView" />
+    <property name="suffix" value=".ftl" />
+    <property name="contentType" value="text/html;charset=utf-8" />
+    <property name="exposeRequestAttributes" value="true" />
+    <property name="exposeSpringMacroHelpers" value="true" />
+    <property name="order" value="0"/>
+  </bean>
+  <!--HTML视图解析-->
+  <bean id="viewResolverHtml" class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+    <property name="viewClass" value="org.springframework.web.servlet.view.freemarker.FreeMarkerView" />
+    <property name="suffix" value=".html" />
+    <property name="contentType" value="text/html;charset=utf-8" />
+    <property name="exposeRequestAttributes" value="true" />
+    <property name="exposeSpringMacroHelpers" value="true" />
+    <property name="order" value="1"/>
+  </bean>
+  <!--JSP视图解析器-->
+  <bean id="viewResolverJsp" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    <property name="prefix" value="/WEB-INF/view/"/>
+    <property name="suffix" value=".jsp"/>
+    <property name="viewClass" value="org.springframework.web.servlet.view.InternalResourceView"/>
+    <property name="order" value="2"/>
+  </bean>
+
+  <!-- 通过 order 属性来定义视图解析器的优先级, order 值越小优先级越高 -->
+  <bean class="org.springframework.web.servlet.view.BeanNameViewResolver">
+    <property name="order" value="10"/>
+  </bean>
+  <!--&lt;!&ndash;设置配置方案(如果不要这个加了下边的,Controller层不能正常工作)&ndash;&gt;-->
+  <!--<mvc:annotation-driven/>-->
+  <!--&lt;!&ndash;使用默认的Servlet来响应静态文件(如果不要这个,css,js等文件不能读取)&ndash;&gt;-->
+  <!--<mvc:default-servlet-handler/>-->
+  <!--面对切面编程使用-->
+  <aop:aspectj-autoproxy/>
+</beans>
