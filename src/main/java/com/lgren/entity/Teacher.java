@@ -14,16 +14,15 @@ import java.time.LocalDateTime;
 
 /**
  * <p>
- * 
- * </p>
  *
+ * </p>
  * @author Lgren
  * @since 2018-11-07
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@ApiModel(value="Teacher对象", description="")
+@ApiModel(value = "Teacher对象", description = "")
 public class Teacher extends Model<Teacher> {
 
     private static final long serialVersionUID = 1L;
